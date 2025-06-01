@@ -1,0 +1,112 @@
+[
+    {
+        "id": "circle1",
+        "name": "Kathmandu Central Circle",
+        "color": "bg-green-700",
+        "sections": [
+            {
+                "id": "circle1-admin",
+                "name": "Administration Section",
+                "contacts": [
+                    {
+                        "designation": "Circle Chief",
+                        "name": "Rajesh Hamal",
+                        "callSign": "Kilo-1",
+                        "landline": "01-4223444",
+                        "contact1": "9849012345",
+                        "contact2": "9859012345",
+                        "email": "rajesh.hamal@kathmandupolice.gov.np",
+                        "details": "Kathmandu Central Circle Administration"
+                    }
+                ]
+            },
+            {
+                "id": "circle1-operations",
+                "name": "Operations Section",
+                "contacts": [
+                    {
+                        "designation": "Operations Head",
+                        "name": "Anil Gurung",
+                        "callSign": "Liciário
+
+ima-1",
+                        "landline": "01-4223445",
+                        "contact1": "9840123456",
+                        "contact2": "9850123456",
+                        "email": "anil.gurung@kathmandupolice.gov.np",
+                        "details": "Manages circle operations"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": "circle2",
+        "name": "Kathmandu East Circle",
+        "color": "bg-green-700",
+        "sections": [
+            {
+                "id": "circle2-patrol",
+                "name": "Patrol Section",
+                "contacts": [
+                    {
+                        "designation": "Patrol Chief",
+                        "name": "Gopal Pandey",
+                        "callSign": "Mike-1",
+                        "landline": "01-4223455",
+                        "contact1": "9841234567",
+                        "contact2": "9851234567",
+                        "email": "gopal.pandey@kathmandupolice.gov.np",
+                        "details": "Kathmandu East Circle Patrol"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": "prabhag1",
+        "name": "New Road Prabhag",
+        "color": "bg-green-700",
+        "sections": [
+            {
+                "id": "prabhag1-crime",
+                "name": "Crime Prevention",
+                "contacts": [
+                    {
+                        "designation": "Prabhag In-Charge",
+                        "name": "Krishna Shrestha",
+                        "callSign": "November-1",
+                        "landline": "01-4223466",
+                        "contact1": "9842345678",
+                        "contact2": "9852345678",
+                        "email": "krishna.shrestha@kathmandupolice.gov.np",
+                        "details": "New Road Prabhag Crime Prevention"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": "ilaka1",
+        "name": "Thamel Ilaka",
+        "color": "bg-green-700",
+        "sections": [
+            {
+                "id": "ilaka1-tourist",
+                "name": "Tourist Police",
+                "contacts": [
+                    {
+                        "designation": "Ilaka In-Charge",
+                        "name": "Sita Poudel",
+                        "callSign": "Oscar-1",
+                        "landline": "01-4223445",
+                        "contact1": "9850123456",
+                        "contact2": "9840123456",
+                        "email": "sita.poudel@kathmandupolice.gov.np",
+                        "details": "Thamel Ilaka Tourist Police"
+                    }
+                ]
+            }
+        ]
+    }
+]
