@@ -20,6 +20,18 @@
               "details": "Cyber crime investigations"
             }
           ]
+          "contacts": [
+            {
+              "designation": "D.O.",
+              "name": "Duty Officer",
+              "callSign": "-",
+              "landline": "01-4223477",
+              "contact1": "9842345678",
+              "contact2": "9852345678",
+              "email": "cyberburue@nepalpolice.gov.np",
+              "details": "Bhotahity"
+            }
+          ]
         }
       ]
     },
