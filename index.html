@@ -357,616 +357,613 @@
         </div>
     </footer>
 
-    <!-- Instead of embedding JSON directly, fetch it from contactsData.json -->
+    <!-- Instead of embedding all JSON in one file, fetch three separate files -->
     <script>
-        // Fetch the JSON data from the separate file
-        fetch('contactsData.json')
-            .then(response => response.json())
-            .then(data => {
-                // From here on, use `data` exactly as before
-                // Combine all contacts for "All Contacts" tab
-                const allContacts = [];
-
-                // Extract all contacts from the structure
-                function extractContacts(structure) {
-                    const contacts = [];
-
-                    // Floors and sections
-                    structure.floors.forEach(floor => {
-                        floor.sections.forEach(section => {
-                            contacts.push(...section.contacts);
-                        });
-                    });
-
-                    // Subordinate offices
-                    structure.subOffices.forEach(office => {
-                        office.sections.forEach(section => {
-                            contacts.push(...section.contacts);
-                        });
-                    });
-
-                    // Other offices
-                    structure.otherOffices.forEach(office => {
-                        office.sections.forEach(section => {
-                            contacts.push(...section.contacts);
-                        });
-                    });
-
-                    return contacts;
+        Promise.all([
+            fetch('floorsData.json').then(res => res.json()),
+            fetch('subOfficesData.json').then(res => res.json()),
+            fetch('otherOfficesData.json').then(res => res.json())
+        ])
+        .then(([floorsData, subOfficesData, otherOfficesData]) => {
+            const data = {
+                structure: {
+                    floors: floorsData.floors,
+                    subOffices: subOfficesData.subOffices,
+                    otherOffices: otherOfficesData.otherOffices
                 }
+            };
 
-                allContacts.push(...extractContacts(data.structure));
-
-                // Current state
-                let currentTab = 'floors';
-                let currentSection = '';
-                let currentContacts = [];
-                let currentSort = { field: 'name', direction: 'asc' };
-                let currentPage = 1;
-                const contactsPerPage = 10;
-                let currentSearchTerm = '';
-                let currentFilter = 'all';
-
-                // DOM Elements
-                const tabButtons = {
-                    floors: document.getElementById('floorsTab'),
-                    subOffices: document.getElementById('subOfficesTab'),
-                    otherOffices: document.getElementById('otherOfficesTab'),
-                    allContacts: document.getElementById('allContactsTab')
-                };
-
-                const tabContents = {
-                    floors: document.getElementById('floorsContent'),
-                    subOffices: document.getElementById('subOfficesContent'),
-                    otherOffices: document.getElementById('otherOfficesContent'),
-                    allContacts: document.getElementById('allContactsContent'),
-                    details: document.getElementById('detailsContent')
-                };
-
-                const floorsContainer = document.getElementById('floorsContainer');
-                const subOfficesContainer = document.getElementById('subOfficesContainer');
-                const otherOfficesContainer = document.getElementById('otherOfficesContainer');
-                const backButton = document.getElementById('backButton');
-                const detailsTitle = document.getElementById('detailsTitle');
-                const contactsList = document.getElementById('contactsList');
-                const allContactsList = document.getElementById('allContactsList');
-                const globalSearch = document.getElementById('globalSearch');
-                const sectionSearch = document.getElementById('sectionSearch');
-                const contactFilter = document.getElementById('contactFilter');
-                const contactSort = document.getElementById('contactSort');
-                const prevPage = document.getElementById('prevPage');
-                const nextPage = document.getElementById('nextPage');
-                const contactStart = document.getElementById('contactStart');
-                const contactEnd = document.getElementById('contactEnd');
-                const contactTotal = document.getElementById('contactTotal');
-
-                // Modal elements
-                const contactModal = document.getElementById('contactModal');
-                const closeModal = document.getElementById('closeModal');
-                const modalTitle = document.getElementById('modalTitle');
-                const modalDesignation = document.getElementById('modalDesignation');
-                const modalName = document.getElementById('modalName');
-                const modalCallSign = document.getElementById('modalCallSign');
-                const modalLandline = document.getElementById('modalLandline');
-                const modalContact1 = document.getElementById('modalContact1');
-                const modalContact2 = document.getElementById('modalContact2');
-                const modalEmail = document.getElementById('modalEmail');
-                const modalDetails = document.getElementById('modalDetails');
-                const callLandline = document.getElementById('callLandline');
-                const callPrimary = document.getElementById('callPrimary');
-                const callSecondary = document.getElementById('callSecondary');
-                const emailContact = document.getElementById('emailContact');
-
-                // Event Listeners
-                tabButtons.floors.addEventListener('click', () => switchTab('floors'));
-                tabButtons.subOffices.addEventListener('click', () => switchTab('subOffices'));
-                tabButtons.otherOffices.addEventListener('click', () => switchTab('otherOffices'));
-                tabButtons.allContacts.addEventListener('click', () => switchTab('allContacts'));
-
-                backButton.addEventListener('click', () => {
-                    tabContents.details.classList.add('hidden');
-                    tabContents[currentTab].classList.remove('hidden');
+            // Combine all contacts for "All Contacts" tab
+            const allContacts = [];
+            function extractContacts(structure) {
+                const contacts = [];
+                // Floors and sections
+                structure.floors.forEach(floor => {
+                    floor.sections.forEach(section => {
+                        contacts.push(...section.contacts);
+                    });
                 });
-
-                globalSearch.addEventListener('input', (e) => {
-                    currentSearchTerm = e.target.value.toLowerCase();
-                    if(currentTab === 'floors') renderFloors();
-                    else if(currentTab === 'subOffices') renderSubOffices();
-                    else if(currentTab === 'otherOffices') renderOtherOffices();
-                    else if(currentTab === 'allContacts') renderAllContacts();
-                    else if(currentTab === 'details') renderSectionContacts();
+                // Subordinate offices
+                structure.subOffices.forEach(office => {
+                    office.sections.forEach(section => {
+                        contacts.push(...section.contacts);
+                    });
                 });
-
-                sectionSearch.addEventListener('input', (e) => {
-                    currentSearchTerm = e.target.value.toLowerCase();
-                    renderSectionContacts();
+                // Other offices
+                structure.otherOffices.forEach(office => {
+                    office.sections.forEach(section => {
+                        contacts.push(...section.contacts);
+                    });
                 });
+                return contacts;
+            }
+            allContacts.push(...extractContacts(data.structure));
 
-                contactFilter.addEventListener('change', (e) => {
-                    currentFilter = e.target.value;
-                    currentPage = 1;
+            // Current state
+            let currentTab = 'floors';
+            let currentSection = '';
+            let currentContacts = [];
+            let currentSort = { field: 'name', direction: 'asc' };
+            let currentPage = 1;
+            const contactsPerPage = 10;
+            let currentSearchTerm = '';
+            let currentFilter = 'all';
+
+            // DOM Elements
+            const tabButtons = {
+                floors: document.getElementById('floorsTab'),
+                subOffices: document.getElementById('subOfficesTab'),
+                otherOffices: document.getElementById('otherOfficesTab'),
+                allContacts: document.getElementById('allContactsTab')
+            };
+
+            const tabContents = {
+                floors: document.getElementById('floorsContent'),
+                subOffices: document.getElementById('subOfficesContent'),
+                otherOffices: document.getElementById('otherOfficesContent'),
+                allContacts: document.getElementById('allContactsContent'),
+                details: document.getElementById('detailsContent')
+            };
+
+            const floorsContainer = document.getElementById('floorsContainer');
+            const subOfficesContainer = document.getElementById('subOfficesContainer');
+            const otherOfficesContainer = document.getElementById('otherOfficesContainer');
+            const backButton = document.getElementById('backButton');
+            const detailsTitle = document.getElementById('detailsTitle');
+            const contactsList = document.getElementById('contactsList');
+            const allContactsList = document.getElementById('allContactsList');
+            const globalSearch = document.getElementById('globalSearch');
+            const sectionSearch = document.getElementById('sectionSearch');
+            const contactFilter = document.getElementById('contactFilter');
+            const contactSort = document.getElementById('contactSort');
+            const prevPage = document.getElementById('prevPage');
+            const nextPage = document.getElementById('nextPage');
+            const contactStart = document.getElementById('contactStart');
+            const contactEnd = document.getElementById('contactEnd');
+            const contactTotal = document.getElementById('contactTotal');
+
+            // Modal elements
+            const contactModal = document.getElementById('contactModal');
+            const closeModal = document.getElementById('closeModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalDesignation = document.getElementById('modalDesignation');
+            const modalName = document.getElementById('modalName');
+            const modalCallSign = document.getElementById('modalCallSign');
+            const modalLandline = document.getElementById('modalLandline');
+            const modalContact1 = document.getElementById('modalContact1');
+            const modalContact2 = document.getElementById('modalContact2');
+            const modalEmail = document.getElementById('modalEmail');
+            const modalDetails = document.getElementById('modalDetails');
+            const callLandline = document.getElementById('callLandline');
+            const callPrimary = document.getElementById('callPrimary');
+            const callSecondary = document.getElementById('callSecondary');
+            const emailContact = document.getElementById('emailContact');
+
+            // Event Listeners
+            tabButtons.floors.addEventListener('click', () => switchTab('floors'));
+            tabButtons.subOffices.addEventListener('click', () => switchTab('subOffices'));
+            tabButtons.otherOffices.addEventListener('click', () => switchTab('otherOffices'));
+            tabButtons.allContacts.addEventListener('click', () => switchTab('allContacts'));
+
+            backButton.addEventListener('click', () => {
+                tabContents.details.classList.add('hidden');
+                tabContents[currentTab].classList.remove('hidden');
+            });
+
+            globalSearch.addEventListener('input', (e) => {
+                currentSearchTerm = e.target.value.toLowerCase();
+                if(currentTab === 'floors') renderFloors();
+                else if(currentTab === 'subOffices') renderSubOffices();
+                else if(currentTab === 'otherOffices') renderOtherOffices();
+                else if(currentTab === 'allContacts') renderAllContacts();
+                else if(currentTab === 'details') renderSectionContacts();
+            });
+
+            sectionSearch.addEventListener('input', (e) => {
+                currentSearchTerm = e.target.value.toLowerCase();
+                renderSectionContacts();
+            });
+
+            contactFilter.addEventListener('change', (e) => {
+                currentFilter = e.target.value;
+                currentPage = 1;
+                renderAllContacts();
+            });
+
+            contactSort.addEventListener('change', (e) => {
+                const [field, direction] = e.target.value.split('-');
+                currentSort = { field, direction };
+                renderAllContacts();
+            });
+
+            prevPage.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
                     renderAllContacts();
-                });
+                }
+            });
 
-                contactSort.addEventListener('change', (e) => {
-                    const [field, direction] = e.target.value.split('-');
-                    currentSort = { field, direction };
+            nextPage.addEventListener('click', () => {
+                const totalPages = Math.ceil(filterAndSortContacts(allContacts).length / contactsPerPage);
+                if (currentPage < totalPages) {
+                    currentPage++;
                     renderAllContacts();
-                });
-
-                prevPage.addEventListener('click', () => {
-                    if (currentPage > 1) {
-                        currentPage--;
-                        renderAllContacts();
-                    }
-                });
-
-                nextPage.addEventListener('click', () => {
-                    const totalPages = Math.ceil(filterAndSortContacts(allContacts).length / contactsPerPage);
-                    if (currentPage < totalPages) {
-                        currentPage++;
-                        renderAllContacts();
-                    }
-                });
-
-                document.querySelectorAll('.sort-header').forEach(header => {
-                    header.addEventListener('click', () => {
-                        const field = header.dataset.sort;
-                        if (currentSort.field === field) {
-                            currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
-                        } else {
-                            currentSort.field = field;
-                            currentSort.direction = 'asc';
-                        }
-
-                        document.querySelectorAll('.sort-header').forEach(h => {
-                            h.classList.remove('sort-asc', 'sort-desc');
-                        });
-
-                        header.classList.add(currentSort.direction === 'asc' ? 'sort-asc' : 'sort-desc');
-
-                        renderSectionContacts();
-                    });
-                });
-
-                closeModal.addEventListener('click', () => {
-                    contactModal.classList.add('hidden');
-                });
-
-                // Functions
-                function switchTab(tab) {
-                    Object.values(tabContents).forEach(content => {
-                        content.classList.add('hidden');
-                    });
-
-                    tabContents[tab].classList.remove('hidden');
-
-                    Object.values(tabButtons).forEach(button => {
-                        button.classList.remove('active', 'text-blue-700', 'border-blue-700');
-                        button.classList.add('text-gray-600', 'hover:text-blue-700');
-                    });
-
-                    tabButtons[tab].classList.add('active', 'text-blue-700', 'border-blue-700');
-                    tabButtons[tab].classList.remove('text-gray-600', 'hover:text-blue-700');
-
-                    currentTab = tab;
-                    currentSearchTerm = '';
-                    globalSearch.value = '';
-
-                    if (tab === 'allContacts') {
-                        currentPage = 1;
-                        renderAllContacts();
-                    }
                 }
+            });
 
-                function renderFloors() {
-                    floorsContainer.innerHTML = '';
-
-                    data.structure.floors.forEach(floor => {
-                        const floorCard = document.createElement('div');
-                        floorCard.className = 'bg-white rounded-lg shadow-md overflow-hidden card-hover';
-
-                        floorCard.innerHTML = `
-                            <div class="${floor.color} text-white px-4 py-3">
-                                <h3 class="font-bold text-base md:text-lg">${floor.name}</h3>
-                            </div>
-                            <div class="p-3 md:p-4">
-                                <div class="mb-3 md:mb-4">
-                                    <h4 class="font-semibold text-gray-700 mb-2 flex items-center">
-                                        <i class="fas fa-building mr-2 text-blue-600"></i> Sections
-                                    </h4>
-                                    <ul class="space-y-2" id="sections-${floor.id}">
-                                        <!-- Sections will be added here -->
-                                    </ul>
-                                </div>
-                            </div>
-                        `;
-
-                        floorsContainer.appendChild(floorCard);
-
-                        const sectionsList = document.getElementById(`sections-${floor.id}`);
-
-                        floor.sections.forEach(section => {
-                            const sectionItem = document.createElement('li');
-                            sectionItem.innerHTML = `
-                                <button class="section-btn w-full text-left px-3 py-2 bg-gray-100 hover:bg-blue-50 rounded flex justify-between items-center text-sm md:text-base" data-section="${section.id}">
-                                    <span>${section.name}</span>
-                                    <i class="fas fa-chevron-right text-sm text-gray-500"></i>
-                                </button>
-                            `;
-
-                            sectionsList.appendChild(sectionItem);
-
-                            sectionItem.querySelector('.section-btn').addEventListener('click', () => {
-                                showSectionDetails(section.id);
-                            });
-                        });
-                    });
-                }
-
-                function renderSubOffices() {
-                    subOfficesContainer.innerHTML = '';
-
-                    data.structure.subOffices.forEach(office => {
-                        const officeCard = document.createElement('div');
-                        officeCard.className = 'bg-white rounded-lg shadow-md overflow-hidden card-hover';
-
-                        officeCard.innerHTML = `
-                            <div class="${office.color} text-white px-4 py-3">
-                                <h3 class="font-bold text-base md:text-lg">${office.name}</h3>
-                            </div>
-                            <div class="p-3 md:p-4">
-                                <div class="mb-3 md:mb-4">
-                                    <h4 class="font-semibold text-gray-700 mb-2 flex items-center">
-                                        <i class="fas fa-building mr-2 text-green-600"></i> Sections
-                                    </h4>
-                                    <ul class="space-y-2" id="sections-${office.id}">
-                                        <!-- Sections will be added here -->
-                                    </ul>
-                                </div>
-                            </div>
-                        `;
-
-                        subOfficesContainer.appendChild(officeCard);
-
-                        const sectionsList = document.getElementById(`sections-${office.id}`);
-
-                        office.sections.forEach(section => {
-                            const sectionItem = document.createElement('li');
-                            sectionItem.innerHTML = `
-                                <button class="section-btn w-full text-left px-3 py-2 bg-gray-100 hover:bg-green-50 rounded flex justify-between items-center text-sm md:text-base" data-section="${section.id}">
-                                    <span>${section.name}</span>
-                                    <i class="fas fa-chevron-right text-sm text-gray-500"></i>
-                                </button>
-                            `;
-
-                            sectionsList.appendChild(sectionItem);
-
-                            sectionItem.querySelector('.section-btn').addEventListener('click', () => {
-                                showSectionDetails(section.id);
-                            });
-                        });
-                    });
-                }
-
-                function renderOtherOffices() {
-                    otherOfficesContainer.innerHTML = '';
-
-                    data.structure.otherOffices.forEach(office => {
-                        const officeCard = document.createElement('div');
-                        officeCard.className = 'bg-white rounded-lg shadow-md overflow-hidden card-hover';
-
-                        officeCard.innerHTML = `
-                            <div class="${office.color} text-white px-4 py-3">
-                                <h3 class="font-bold text-base md:text-lg">${office.name}</h3>
-                            </div>
-                            <div class="p-3 md:p-4">
-                                <div class="mb-3 md:mb-4">
-                                    <h4 class="font-semibold text-gray-700 mb-2 flex items-center">
-                                        <i class="fas fa-building mr-2 text-purple-600"></i> Sections
-                                    </h4>
-                                    <ul class="space-y-2" id="sections-${office.id}">
-                                        <!-- Sections will be added here -->
-                                    </ul>
-                                </div>
-                            </div>
-                        `;
-
-                        otherOfficesContainer.appendChild(officeCard);
-
-                        const sectionsList = document.getElementById(`sections-${office.id}`);
-
-                        office.sections.forEach(section => {
-                            const sectionItem = document.createElement('li');
-                            sectionItem.innerHTML = `
-                                <button class="section-btn w-full text-left px-3 py-2 bg-gray-100 hover:bg-purple-50 rounded flex justify-between items-center text-sm md:text-base" data-section="${section.id}">
-                                    <span>${section.name}</span>
-                                    <i class="fas fa-chevron-right text-sm text-gray-500"></i>
-                                </button>
-                            `;
-
-                            sectionsList.appendChild(sectionItem);
-
-                            sectionItem.querySelector('.section-btn').addEventListener('click', () => {
-                                showSectionDetails(section.id);
-                            });
-                        });
-                    });
-                }
-
-                function showSectionDetails(sectionId) {
-                    tabContents[currentTab].classList.add('hidden');
-                    tabContents.details.classList.remove('hidden');
-
-                    let sectionData = null;
-                    let sectionName = '';
-
-                    for (const floor of data.structure.floors) {
-                        const section = floor.sections.find(s => s.id === sectionId);
-                        if (section) {
-                            sectionData = section;
-                            sectionName = `${floor.name} - ${section.name}`;
-                            break;
-                        }
+            document.querySelectorAll('.sort-header').forEach(header => {
+                header.addEventListener('click', () => {
+                    const field = header.dataset.sort;
+                    if (currentSort.field === field) {
+                        currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        currentSort.field = field;
+                        currentSort.direction = 'asc';
                     }
 
-                    if (!sectionData) {
-                        for (const office of data.structure.subOffices) {
-                            const section = office.sections.find(s => s.id === sectionId);
-                            if (section) {
-                                sectionData = section;
-                                sectionName = `${office.name} - ${section.name}`;
-                                break;
-                            }
-                        }
-                    }
-
-                    if (!sectionData) {
-                        for (const office of data.structure.otherOffices) {
-                            const section = office.sections.find(s => s.id === sectionId);
-                            if (section) {
-                                sectionData = section;
-                                sectionName = `${office.name} - ${section.name}`;
-                                break;
-                            }
-                        }
-                    }
-
-                    if (!sectionData) return;
-
-                    detailsTitle.textContent = sectionName;
-                    currentSection = sectionId;
-                    currentContacts = sectionData.contacts || [];
-                    currentSearchTerm = '';
-                    sectionSearch.value = '';
-
-                    currentSort = { field: 'name', direction: 'asc' };
                     document.querySelectorAll('.sort-header').forEach(h => {
                         h.classList.remove('sort-asc', 'sort-desc');
                     });
 
+                    header.classList.add(currentSort.direction === 'asc' ? 'sort-asc' : 'sort-desc');
+
                     renderSectionContacts();
+                });
+            });
+
+            closeModal.addEventListener('click', () => {
+                contactModal.classList.add('hidden');
+            });
+
+            // Functions
+            function switchTab(tab) {
+                Object.values(tabContents).forEach(content => {
+                    content.classList.add('hidden');
+                });
+
+                tabContents[tab].classList.remove('hidden');
+
+                Object.values(tabButtons).forEach(button => {
+                    button.classList.remove('active', 'text-blue-700', 'border-blue-700');
+                    button.classList.add('text-gray-600', 'hover:text-blue-700');
+                });
+
+                tabButtons[tab].classList.add('active', 'text-blue-700', 'border-blue-700');
+                tabButtons[tab].classList.remove('text-gray-600', 'hover:text-blue-700');
+
+                currentTab = tab;
+                currentSearchTerm = '';
+                globalSearch.value = '';
+
+                if (tab === 'allContacts') {
+                    currentPage = 1;
+                    renderAllContacts();
                 }
+            }
 
-                function renderSectionContacts() {
-                    if (!currentContacts) return;
+            function renderFloors() {
+                floorsContainer.innerHTML = '';
 
-                    let filteredContacts = currentContacts.filter(contact => {
-                        const searchFields = [
-                            contact.designation.toLowerCase(),
-                            contact.name.toLowerCase(),
-                            contact.callSign.toLowerCase(),
-                            contact.contact1,
-                            contact.contact2,
-                            contact.landline,
-                            contact.email.toLowerCase(),
-                            contact.details.toLowerCase()
-                        ];
+                data.structure.floors.forEach(floor => {
+                    const floorCard = document.createElement('div');
+                    floorCard.className = 'bg-white rounded-lg shadow-md overflow-hidden card-hover';
 
-                        return searchFields.some(field => field.includes(currentSearchTerm));
-                    });
+                    floorCard.innerHTML = `
+                        <div class="${floor.color} text-white px-4 py-3">
+                            <h3 class="font-bold text-base md:text-lg">${floor.name}</h3>
+                        </div>
+                        <div class="p-3 md:p-4">
+                            <div class="mb-3 md:mb-4">
+                                <h4 class="font-semibold text-gray-700 mb-2 flex items-center">
+                                    <i class="fas fa-building mr-2 text-blue-600"></i> Sections
+                                </h4>
+                                <ul class="space-y-2" id="sections-${floor.id}">
+                                    <!-- Sections will be added here -->
+                                </ul>
+                            </div>
+                        </div>
+                    `;
 
-                    filteredContacts.sort((a, b) => {
-                        const fieldA = a[currentSort.field]?.toLowerCase() || '';
-                        const fieldB = b[currentSort.field]?.toLowerCase() || '';
+                    floorsContainer.appendChild(floorCard);
 
-                        if (currentSort.direction === 'asc') {
-                            return fieldA.localeCompare(fieldB);
-                        } else {
-                            return fieldB.localeCompare(fieldA);
-                        }
-                    });
+                    const sectionsList = document.getElementById(`sections-${floor.id}`);
 
-                    contactsList.innerHTML = '';
-
-                    filteredContacts.forEach(contact => {
-                        const row = document.createElement('tr');
-                        row.className = 'hover:bg-gray-50';
-
-                        const highlightText = (text) => {
-                            if (!currentSearchTerm) return text;
-                            const regex = new RegExp(currentSearchTerm, 'gi');
-                            return text.replace(regex, match => `<span class="search-highlight">${match}</span>`);
-                        };
-
-                        row.innerHTML = `
-                            <td class="px-3 md:px-6 py-3 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900">${highlightText(contact.designation)}</div>
-                            </td>
-                            <td class="px-3 md:px-6 py-3 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900">${highlightText(contact.name)}</div>
-                            </td>
-                            <td class="px-3 md:px-6 py-3 whitespace-nowrap">
-                                <div class="text-sm text-gray-900">${highlightText(contact.contact1)}</div>
-                                ${contact.contact2 ? `<div class="text-xs text-gray-500">${highlightText(contact.contact2)}</div>` : ''}
-                            </td>
-                            <td class="px-3 md:px-6 py-3 whitespace-nowrap text-right text-sm font-medium">
-                                <button class="view-details text-blue-600 hover:text-blue-900 mr-2 md:mr-3" data-contact='${JSON.stringify(contact).replace(/'/g, "\\'")}'>
-                                    <i class="fas fa-eye mr-1"></i> <span class="hidden sm:inline">View</span>
-                                </button>
-                                <a href="tel:${contact.contact1}" class="text-green-600 hover:text-green-900">
-                                    <i class="fas fa-phone mr-1"></i> <span class="hidden sm:inline">Call</span>
-                                </a>
-                            </td>
+                    floor.sections.forEach(section => {
+                        const sectionItem = document.createElement('li');
+                        sectionItem.innerHTML = `
+                            <button class="section-btn w-full text-left px-3 py-2 bg-gray-100 hover:bg-blue-50 rounded flex justify-between items-center text-sm md:text-base" data-section="${section.id}">
+                                <span>${section.name}</span>
+                                <i class="fas fa-chevron-right text-sm text-gray-500"></i>
+                            </button>
                         `;
 
-                        contactsList.appendChild(row);
-                    });
+                        sectionsList.appendChild(sectionItem);
 
-                    document.querySelectorAll('.view-details').forEach(button => {
-                        button.addEventListener('click', (e) => {
-                            const contact = JSON.parse(button.dataset.contact);
-                            showContactModal(contact);
+                        sectionItem.querySelector('.section-btn').addEventListener('click', () => {
+                            showSectionDetails(section.id);
                         });
                     });
+                });
+            }
+
+            function renderSubOffices() {
+                subOfficesContainer.innerHTML = '';
+
+                data.structure.subOffices.forEach(office => {
+                    const officeCard = document.createElement('div');
+                    officeCard.className = 'bg-white rounded-lg shadow-md overflow-hidden card-hover';
+
+                    officeCard.innerHTML = `
+                        <div class="${office.color} text-white px-4 py-3">
+                            <h3 class="font-bold text-base md:text-lg">${office.name}</h3>
+                        </div>
+                        <div class="p-3 md:p-4">
+                            <div class="mb-3 md:mb-4">
+                                <h4 class="font-semibold text-gray-700 mb-2 flex items-center">
+                                    <i class="fas fa-building mr-2 text-green-600"></i> Sections
+                                </h4>
+                                <ul class="space-y-2" id="sections-${office.id}">
+                                    <!-- Sections will be added here -->
+                                </ul>
+                            </div>
+                        </div>
+                    `;
+
+                    subOfficesContainer.appendChild(officeCard);
+
+                    const sectionsList = document.getElementById(`sections-${office.id}`);
+
+                    office.sections.forEach(section => {
+                        const sectionItem = document.createElement('li');
+                        sectionItem.innerHTML = `
+                            <button class="section-btn w-full text-left px-3 py-2 bg-gray-100 hover:bg-green-50 rounded flex justify-between items-center text-sm md:text-base" data-section="${section.id}">
+                                <span>${section.name}</span>
+                                <i class="fas fa-chevron-right text-sm text-gray-500"></i>
+                            </button>
+                        `;
+
+                        sectionsList.appendChild(sectionItem);
+
+                        sectionItem.querySelector('.section-btn').addEventListener('click', () => {
+                            showSectionDetails(section.id);
+                        });
+                    });
+                });
+            }
+
+            function renderOtherOffices() {
+                otherOfficesContainer.innerHTML = '';
+
+                data.structure.otherOffices.forEach(office => {
+                    const officeCard = document.createElement('div');
+                    officeCard.className = 'bg-white rounded-lg shadow-md overflow-hidden card-hover';
+
+                    officeCard.innerHTML = `
+                        <div class="${office.color} text-white px-4 py-3">
+                            <h3 class="font-bold text-base md:text-lg">${office.name}</h3>
+                        </div>
+                        <div class="p-3 md:p-4">
+                            <div class="mb-3 md:mb-4">
+                                <h4 class="font-semibold text-gray-700 mb-2 flex items-center">
+                                    <i class="fas fa-building mr-2 text-purple-600"></i> Sections
+                                </h4>
+                                <ul class="space-y-2" id="sections-${office.id}">
+                                    <!-- Sections will be added here -->
+                                </ul>
+                            </div>
+                        </div>
+                    `;
+
+                    otherOfficesContainer.appendChild(officeCard);
+
+                    const sectionsList = document.getElementById(`sections-${office.id}`);
+
+                    office.sections.forEach(section => {
+                        const sectionItem = document.createElement('li');
+                        sectionItem.innerHTML = `
+                            <button class="section-btn w-full text-left px-3 py-2 bg-gray-100 hover:bg-purple-50 rounded flex justify-between items-center text-sm md:text-base" data-section="${section.id}">
+                                <span>${section.name}</span>
+                                <i class="fas fa-chevron-right text-sm text-gray-500"></i>
+                            </button>
+                        `;
+
+                        sectionsList.appendChild(sectionItem);
+
+                        sectionItem.querySelector('.section-btn').addEventListener('click', () => {
+                            showSectionDetails(section.id);
+                        });
+                    });
+                });
+            }
+
+            function showSectionDetails(sectionId) {
+                tabContents[currentTab].classList.add('hidden');
+                tabContents.details.classList.remove('hidden');
+
+                let sectionData = null;
+                let sectionName = '';
+
+                for (const floor of data.structure.floors) {
+                    const section = floor.sections.find(s => s.id === sectionId);
+                    if (section) {
+                        sectionData = section;
+                        sectionName = `${floor.name} - ${section.name}`;
+                        break;
+                    }
                 }
 
-                function filterAndSortContacts(contacts) {
-                    let filteredContacts = contacts.filter(contact => {
-                        let matchesFilter = true;
-                        if (currentFilter !== 'all') {
-                            matchesFilter = contact.designation.toLowerCase().includes(currentFilter) ||
-                                           contact.name.toLowerCase().includes(currentFilter);
+                if (!sectionData) {
+                    for (const office of data.structure.subOffices) {
+                        const section = office.sections.find(s => s.id === sectionId);
+                        if (section) {
+                            sectionData = section;
+                            sectionName = `${office.name} - ${section.name}`;
+                            break;
                         }
-
-                        if (!matchesFilter) return false;
-
-                        if (!currentSearchTerm) return true;
-
-                        const searchFields = [
-                            contact.designation.toLowerCase(),
-                            contact.name.toLowerCase(),
-                            contact.callSign.toLowerCase(),
-                            contact.contact1,
-                            contact.contact2,
-                            contact.landline,
-                            contact.email.toLowerCase(),
-                            contact.details.toLowerCase()
-                        ];
-
-                        return searchFields.some(field => field.includes(currentSearchTerm));
-                    });
-
-                    filteredContacts.sort((a, b) => {
-                        const fieldA = a[currentSort.field]?.toLowerCase() || '';
-                        const fieldB = b[currentSort.field]?.toLowerCase() || '';
-
-                        if (currentSort.direction === 'asc') {
-                            return fieldA.localeCompare(fieldB);
-                        } else {
-                            return fieldB.localeCompare(fieldA);
-                        }
-                    });
-
-                    return filteredContacts;
+                    }
                 }
 
-                function renderAllContacts() {
-                    const filteredContacts = filterAndSortContacts(allContacts);
-                    const totalContacts = filteredContacts.length;
-                    const totalPages = Math.ceil(totalContacts / contactsPerPage);
+                if (!sectionData) {
+                    for (const office of data.structure.otherOffices) {
+                        const section = office.sections.find(s => s.id === sectionId);
+                        if (section) {
+                            sectionData = section;
+                            sectionName = `${office.name} - ${section.name}`;
+                            break;
+                        }
+                    }
+                }
 
-                    contactTotal.textContent = totalContacts;
-                    contactStart.textContent = ((currentPage - 1) * contactsPerPage) + 1;
-                    contactEnd.textContent = Math.min(currentPage * contactsPerPage, totalContacts);
+                if (!sectionData) return;
 
-                    prevPage.disabled = currentPage <= 1;
-                    nextPage.disabled = currentPage >= totalPages;
+                detailsTitle.textContent = sectionName;
+                currentSection = sectionId;
+                currentContacts = sectionData.contacts || [];
+                currentSearchTerm = '';
+                sectionSearch.value = '';
 
-                    const startIndex = (currentPage - 1) * contactsPerPage;
-                    const endIndex = Math.min(startIndex + contactsPerPage, totalContacts);
-                    const pageContacts = filteredContacts.slice(startIndex, endIndex);
+                currentSort = { field: 'name', direction: 'asc' };
+                document.querySelectorAll('.sort-header').forEach(h => {
+                    h.classList.remove('sort-asc', 'sort-desc');
+                });
 
-                    allContactsList.innerHTML = '';
+                renderSectionContacts();
+            }
 
-                    pageContacts.forEach(contact => {
-                        const card = document.createElement('div');
-                        card.className = 'bg-white rounded-lg shadow p-4 md:p-6 hover:shadow-md transition-shadow duration-200 contact-card';
+            function renderSectionContacts() {
+                if (!currentContacts) return;
 
-                        const highlightText = (text) => {
-                            if (!currentSearchTerm) return text;
-                            const regex = new RegExp(currentSearchTerm, 'gi');
-                            return text.replace(regex, match => `<span class="search-highlight">${match}</span>`);
-                        };
+                let filteredContacts = currentContacts.filter(contact => {
+                    const searchFields = [
+                        contact.designation.toLowerCase(),
+                        contact.name.toLowerCase(),
+                        contact.callSign.toLowerCase(),
+                        contact.contact1,
+                        contact.contact2,
+                        contact.landline,
+                        contact.email.toLowerCase(),
+                        contact.details.toLowerCase()
+                    ];
+                    return searchFields.some(field => field.includes(currentSearchTerm));
+                });
 
-                        card.innerHTML = `
-                            <div class="flex items-start">
-                                <div class="flex-shrink-0 h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
-                                    <i class="fas fa-user-tie text-blue-600 text-xl"></i>
+                filteredContacts.sort((a, b) => {
+                    const fieldA = a[currentSort.field]?.toLowerCase() || '';
+                    const fieldB = b[currentSort.field]?.toLowerCase() || '';
+                    if (currentSort.direction === 'asc') {
+                        return fieldA.localeCompare(fieldB);
+                    } else {
+                        return fieldB.localeCompare(fieldA);
+                    }
+                });
+
+                contactsList.innerHTML = '';
+
+                filteredContacts.forEach(contact => {
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-gray-50';
+
+                    const highlightText = (text) => {
+                        if (!currentSearchTerm) return text;
+                        const regex = new RegExp(currentSearchTerm, 'gi');
+                        return text.replace(regex, match => `<span class="search-highlight">${match}</span>`);
+                    };
+
+                    row.innerHTML = `
+                        <td class="px-3 md:px-6 py-3 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">${highlightText(contact.designation)}</div>
+                        </td>
+                        <td class="px-3 md:px-6 py-3 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">${highlightText(contact.name)}</div>
+                        </td>
+                        <td class="px-3 md:px-6 py-3 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${highlightText(contact.contact1)}</div>
+                            ${contact.contact2 ? `<div class="text-xs text-gray-500">${highlightText(contact.contact2)}</div>` : ''}
+                        </td>
+                        <td class="px-3 md:px-6 py-3 whitespace-nowrap text-right text-sm font-medium">
+                            <button class="view-details text-blue-600 hover:text-blue-900 mr-2 md:mr-3" data-contact='${JSON.stringify(contact).replace(/'/g, "\\'")}'>
+                                <i class="fas fa-eye mr-1"></i> <span class="hidden sm:inline">View</span>
+                            </button>
+                            <a href="tel:${contact.contact1}" class="text-green-600 hover:text-green-900">
+                                <i class="fas fa-phone mr-1"></i> <span class="hidden sm:inline">Call</span>
+                            </a>
+                        </td>
+                    `;
+
+                    contactsList.appendChild(row);
+                });
+
+                document.querySelectorAll('.view-details').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const contact = JSON.parse(button.dataset.contact);
+                        showContactModal(contact);
+                    });
+                });
+            }
+
+            function filterAndSortContacts(contacts) {
+                let filteredContacts = contacts.filter(contact => {
+                    let matchesFilter = true;
+                    if (currentFilter !== 'all') {
+                        matchesFilter = contact.designation.toLowerCase().includes(currentFilter) ||
+                                       contact.name.toLowerCase().includes(currentFilter);
+                    }
+                    if (!matchesFilter) return false;
+
+                    if (!currentSearchTerm) return true;
+
+                    const searchFields = [
+                        contact.designation.toLowerCase(),
+                        contact.name.toLowerCase(),
+                        contact.callSign.toLowerCase(),
+                        contact.contact1,
+                        contact.contact2,
+                        contact.landline,
+                        contact.email.toLowerCase(),
+                        contact.details.toLowerCase()
+                    ];
+                    return searchFields.some(field => field.includes(currentSearchTerm));
+                });
+
+                filteredContacts.sort((a, b) => {
+                    const fieldA = a[currentSort.field]?.toLowerCase() || '';
+                    const fieldB = b[currentSort.field]?.toLowerCase() || '';
+                    if (currentSort.direction === 'asc') {
+                        return fieldA.localeCompare(fieldB);
+                    } else {
+                        return fieldB.localeCompare(fieldA);
+                    }
+                });
+
+                return filteredContacts;
+            }
+
+            function renderAllContacts() {
+                const filteredContacts = filterAndSortContacts(allContacts);
+                const totalContacts = filteredContacts.length;
+                const totalPages = Math.ceil(totalContacts / contactsPerPage);
+
+                contactTotal.textContent = totalContacts;
+                contactStart.textContent = ((currentPage - 1) * contactsPerPage) + 1;
+                contactEnd.textContent = Math.min(currentPage * contactsPerPage, totalContacts);
+
+                prevPage.disabled = currentPage <= 1;
+                nextPage.disabled = currentPage >= totalPages;
+
+                const startIndex = (currentPage - 1) * contactsPerPage;
+                const endIndex = Math.min(startIndex + contactsPerPage, totalContacts);
+                const pageContacts = filteredContacts.slice(startIndex, endIndex);
+
+                allContactsList.innerHTML = '';
+
+                pageContacts.forEach(contact => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-white rounded-lg shadow p-4 md:p-6 hover:shadow-md transition-shadow duration-200 contact-card';
+
+                    const highlightText = (text) => {
+                        if (!currentSearchTerm) return text;
+                        const regex = new RegExp(currentSearchTerm, 'gi');
+                        return text.replace(regex, match => `<span class="search-highlight">${match}</span>`);
+                    };
+
+                    card.innerHTML = `
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
+                                <i class="fas fa-user-tie text-blue-600 text-xl"></i>
+                            </div>
+                            <div class="ml-3 md:ml-4 flex-1">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-base md:text-lg font-medium text-gray-900">${highlightText(contact.name)}</h3>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                        ${highlightText(contact.designation)}
+                                    </span>
                                 </div>
-                                <div class="ml-3 md:ml-4 flex-1">
-                                    <div class="flex items-center justify-between">
-                                        <h3 class="text-base md:text-lg font-medium text-gray-900">${highlightText(contact.name)}</h3>
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                            ${highlightText(contact.designation)}
-                                        </span>
-                                    </div>
-                                    <p class="text-xs md:text-sm text-gray-600 mt-1">Call Sign: ${highlightText(contact.callSign)}</p>
-                                    <div class="mt-2 flex flex-wrap gap-2">
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
-                                            <i class="fas fa-mobile-alt mr-1 text-gray-500"></i> ${highlightText(contact.contact1)}
-                                        </span>
-                                        ${contact.landline ? `
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
-                                            <i class="fas fa-phone mr-1 text-gray-500"></i> ${highlightText(contact.landline)}
-                                        </span>
-                                        ` : ''}
-                                    </div>
-                                    <div class="mt-3 flex flex-wrap gap-2">
-                                        <button class="view-details inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-xs md:text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" data-contact='${JSON.stringify(contact).replace(/'/g, "\\'")}'>
-                                            <i class="fas fa-eye mr-1"></i> Details
-                                        </button>
-                                        <a href="tel:${contact.contact1}" class="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-xs md:text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                                            <i class="fas fa-phone mr-1"></i> Call
-                                        </a>
-                                    </div>
+                                <p class="text-xs md:text-sm text-gray-600 mt-1">Call Sign: ${highlightText(contact.callSign)}</p>
+                                <div class="mt-2 flex flex-wrap gap-2">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                                        <i class="fas fa-mobile-alt mr-1 text-gray-500"></i> ${highlightText(contact.contact1)}
+                                    </span>
+                                    ${contact.landline ? `
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                                        <i class="fas fa-phone mr-1 text-gray-500"></i> ${highlightText(contact.landline)}
+                                    </span>
+                                    ` : ''}
+                                </div>
+                                <div class="mt-3 flex flex-wrap gap-2">
+                                    <button class="view-details inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-xs md:text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" data-contact='${JSON.stringify(contact).replace(/'/g, "\\'")}'>
+                                        <i class="fas fa-eye mr-1"></i> Details
+                                    </button>
+                                    <a href="tel:${contact.contact1}" class="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-xs md:text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                        <i class="fas fa-phone mr-1"></i> Call
+                                    </a>
                                 </div>
                             </div>
-                        `;
+                        </div>
+                    `;
 
-                        allContactsList.appendChild(card);
+                    allContactsList.appendChild(card);
+                });
+
+                document.querySelectorAll('.view-details').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const contact = JSON.parse(button.dataset.contact);
+                        showContactModal(contact);
                     });
+                });
+            }
 
-                    document.querySelectorAll('.view-details').forEach(button => {
-                        button.addEventListener('click', (e) => {
-                            const contact = JSON.parse(button.dataset.contact);
-                            showContactModal(contact);
-                        });
-                    });
-                }
+            function showContactModal(contact) {
+                modalTitle.textContent = `${contact.designation} - ${contact.name}`;
+                modalDesignation.textContent = contact.designation;
+                modalName.textContent = contact.name;
+                modalCallSign.textContent = contact.callSign || 'N/A';
+                modalLandline.textContent = contact.landline || 'N/A';
+                modalContact1.textContent = contact.contact1;
+                modalContact2.textContent = contact.contact2 || 'N/A';
+                modalEmail.textContent = contact.email;
+                modalDetails.textContent = contact.details || 'No additional details';
 
-                function showContactModal(contact) {
-                    modalTitle.textContent = `${contact.designation} - ${contact.name}`;
-                    modalDesignation.textContent = contact.designation;
-                    modalName.textContent = contact.name;
-                    modalCallSign.textContent = contact.callSign || 'N/A';
-                    modalLandline.textContent = contact.landline || 'N/A';
-                    modalContact1.textContent = contact.contact1;
-                    modalContact2.textContent = contact.contact2 || 'N/A';
-                    modalEmail.textContent = contact.email;
-                    modalDetails.textContent = contact.details || 'No additional details';
+                callLandline.onclick = () => {
+                    if (contact.landline) window.location.href = `tel:${contact.landline}`;
+                };
+                callPrimary.onclick = () => { window.location.href = `tel:${contact.contact1}`; };
+                callSecondary.onclick = () => {
+                    if (contact.contact2) window.location.href = `tel:${contact.contact2}`;
+                };
+                emailContact.onclick = () => { window.location.href = `mailto:${contact.email}`; };
 
-                    callLandline.onclick = () => {
-                        if (contact.landline) window.location.href = `tel:${contact.landline}`;
-                    };
-                    callPrimary.onclick = () => { window.location.href = `tel:${contact.contact1}`; };
-                    callSecondary.onclick = () => {
-                        if (contact.contact2) window.location.href = `tel:${contact.contact2}`;
-                    };
-                    emailContact.onclick = () => { window.location.href = `mailto:${contact.email}`; };
+                contactModal.classList.remove('hidden');
+            }
 
-                    contactModal.classList.remove('hidden');
-                }
-
-                // Initialize
-                renderFloors();
-                renderSubOffices();
-                renderOtherOffices();
-                renderAllContacts();
-            })
-            .catch(err => {
-                console.error('Failed to fetch contactsData.json:', err);
-            });
+            // Initialize
+            renderFloors();
+            renderSubOffices();
+            renderOtherOffices();
+            renderAllContacts();
+        })
+        .catch(err => {
+            console.error('Failed to fetch JSON files:', err);
+        });
     </script>
 </body>
 </html>
