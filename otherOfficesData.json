@@ -1,0 +1,73 @@
+{
+  "otherOffices": [
+    {
+      "id": "cyber1",
+      "name": "Cyber Bureau",
+      "color": "bg-purple-700",
+      "sections": [
+        {
+          "id": "cyber1-investigation",
+          "name": "Cyber Investigation",
+          "contacts": [
+            {
+              "designation": "Cyber Bureau Chief",
+              "name": "Niraj Basnet",
+              "callSign": "Papa-1",
+              "landline": "01-4223477",
+              "contact1": "9842345678",
+              "contact2": "9852345678",
+              "email": "niraj.basnet@kathmandupolice.gov.np",
+              "details": "Cyber crime investigations"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fire1",
+      "name": "Fire Office",
+      "color": "bg-purple-700",
+      "sections": [
+        {
+          "id": "fire1-response",
+          "name": "Fire Response",
+          "contacts": [
+            {
+              "designation": "Fire Office Chief",
+              "name": "Ramesh K.C.",
+              "callSign": "Quebec-1",
+              "landline": "01-4223488",
+              "contact1": "9843456789",
+              "contact2": "9853456789",
+              "email": "ramesh.kc@kathmandupolice.gov.np",
+              "details": "Fire safety and response"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "water1",
+      "name": "Water Supply Office",
+      "color": "bg-purple-700",
+      "sections": [
+        {
+          "id": "water1-management",
+          "name": "Water Management",
+          "contacts": [
+            {
+              "designation": "Water Supply Coordinator",
+              "name": "Ujjwal Adhikari",
+              "callSign": "Romeo-1",
+              "landline": "01-4223499",
+              "contact1": "9844567890",
+              "contact2": "9854567890",
+              "email": "ujjwal.adhikari@kathmandupolice.gov.np",
+              "details": "Water supply management"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
