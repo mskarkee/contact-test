@@ -1,43 +1,4 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -134,16 +95,16 @@
     <main class="container mx-auto px-2 sm:px-4 py-4 md:py-8">
         <!-- Tabs Navigation -->
         <div class="flex overflow-x-auto border-b border-gray-200 mb-4 md:mb-8 no-scrollbar">
-            <button id="floorsTab" class="tab-button active px-3 py-2 md:px-6 md:py-3 font-medium text-blue-700 border-b-2 border-blue-700 bg-gray-100 outline outline-1 outline-blue-700 whitespace-nowrap">
+            <button id="floorsTab" class="tab-button active px-3 py-2 md:px-6 md:py-3 font-medium text-blue-700 border-b-2 border-blue-700 bg-gray-100 outline outline-blue-700 whitespace-nowrap">
                 <i class="fas fa-building mr-1 md:mr-2"></i>Floors
             </button>
-            <button id="subOfficesTab" class="tab-button px-3 py-2 md:px-6 md:py-3 font-medium text-gray-600 hover:text-blue-700 bg-gray-100 outline outline-1 outline-blue-700 whitespace-nowrap">
+            <button id="subOfficesTab" class="tab-button px-3 py-2 md:px-6 md:py-3 font-medium text-gray-600 hover:text-blue-700 bg-gray-100 outline outline-blue-700 whitespace-nowrap">
                 <i class="fas fa-sitemap mr-1 md:mr-2"></i>Sub Offices
             </button>
-            <button id="otherOfficesTab" class="tab-button px-3 py-2 md:px-6 md:py-3 font-medium text-gray-600 hover:text-blue-700 bg-gray-100 outline outline-1 outline-blue-700 whitespace-nowrap">
+            <button id="otherOfficesTab" class="tab-button px-3 py-2 md:px-6 md:py-3 font-medium text-gray-600 hover:text-blue-700 bg-gray-100 outline outline-blue-700 whitespace-nowrap">
                 <i class="fas fa-network-wired mr-1 md:mr-2"></i>Other Offices
             </button>
-            <button id="allContactsTab" class="tab-button px-3 py-2 md:px-6 md:py-3 font-medium text-gray-600 hover:text-blue-700 bg-gray-100 outline outline-1 outline-blue-700 whitespace-nowrap">
+            <button id="allContactsTab" class="tab-button px-3 py-2 md:px-6 md:py-3 font-medium text-gray-600 hover:text-blue-700 bg-gray-100 outline outline-blue-700 whitespace-nowrap">
                 <i class="fas fa-users mr-1 md:mr-2"></i>All Contacts
             </button>
         </div>
@@ -191,8 +152,7 @@
                                     </select>
                                 </div>
                                 <div class="w-full sm:w-auto">
-                                    <label for="contactízo
-
+                                    <label for="contactSort" class="block text-sm font-medium text-gray-700 mb-1">Sort by:</label>
                                     <select id="contactSort" class="w-full sm:w-48 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base">
                                         <option value="name-asc">Name (A-Z)</option>
                                         <option value="name-desc">Name (Z-A)</option>
@@ -244,9 +204,7 @@
                                 </div>
                             </div>
                             <div id="contactsTable" class="overflow-x-auto">
-                                <table class="min-w-full divide-y divide-gray-200
-
-">
+                                <table class="min-w-full divide-y divide-gray-200">
                                     <thead class="bg-gray-50">
                                         <tr>
                                             <th scope="col" class="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer sort-header" data-sort="designation">
@@ -399,60 +357,44 @@
         </div>
     </footer>
 
+    <!-- Instead of embedding JSON directly, fetch it from contactsData.json -->
     <script>
-        // Fetch data from JSON files
-        async function fetchData() {
-            try {
-                const [floorsResponse, subOfficesResponse, otherOfficesResponse] = await Promise.all([
-                    fetch('floors.json'),
-                    fetch('subOffices.json'),
-                    fetch('otherOffices.json')
-                ]);
-
-                const floors = await floorsResponse.json();
-                const subOffices = await subOfficesResponse.json();
-                const otherOffices = await otherOfficesResponse.json();
-
-                // Combine data into the expected structure
-                const data = {
-                    structure: {
-                        floors,
-                        subOffices,
-                        otherOffices
-                    }
-                };
-
+        // Fetch the JSON data from the separate file
+        fetch('contactsData.json')
+            .then(response => response.json())
+            .then(data => {
+                // From here on, use `data` exactly as before
                 // Combine all contacts for "All Contacts" tab
                 const allContacts = [];
-                
+
                 // Extract all contacts from the structure
                 function extractContacts(structure) {
                     const contacts = [];
-                    
+
                     // Floors and sections
                     structure.floors.forEach(floor => {
                         floor.sections.forEach(section => {
                             contacts.push(...section.contacts);
                         });
                     });
-                    
+
                     // Subordinate offices
                     structure.subOffices.forEach(office => {
                         office.sections.forEach(section => {
                             contacts.push(...section.contacts);
                         });
                     });
-                    
+
                     // Other offices
                     structure.otherOffices.forEach(office => {
                         office.sections.forEach(section => {
                             contacts.push(...section.contacts);
                         });
                     });
-                    
+
                     return contacts;
                 }
-                
+
                 allContacts.push(...extractContacts(data.structure));
 
                 // Current state
@@ -576,13 +518,13 @@
                             currentSort.field = field;
                             currentSort.direction = 'asc';
                         }
-                        
+
                         document.querySelectorAll('.sort-header').forEach(h => {
                             h.classList.remove('sort-asc', 'sort-desc');
                         });
-                        
+
                         header.classList.add(currentSort.direction === 'asc' ? 'sort-asc' : 'sort-desc');
-                        
+
                         renderSectionContacts();
                     });
                 });
@@ -596,21 +538,21 @@
                     Object.values(tabContents).forEach(content => {
                         content.classList.add('hidden');
                     });
-                    
+
                     tabContents[tab].classList.remove('hidden');
-                    
+
                     Object.values(tabButtons).forEach(button => {
                         button.classList.remove('active', 'text-blue-700', 'border-blue-700');
                         button.classList.add('text-gray-600', 'hover:text-blue-700');
                     });
-                    
+
                     tabButtons[tab].classList.add('active', 'text-blue-700', 'border-blue-700');
                     tabButtons[tab].classList.remove('text-gray-600', 'hover:text-blue-700');
-                    
+
                     currentTab = tab;
                     currentSearchTerm = '';
                     globalSearch.value = '';
-                    
+
                     if (tab === 'allContacts') {
                         currentPage = 1;
                         renderAllContacts();
@@ -619,11 +561,11 @@
 
                 function renderFloors() {
                     floorsContainer.innerHTML = '';
-                    
+
                     data.structure.floors.forEach(floor => {
                         const floorCard = document.createElement('div');
                         floorCard.className = 'bg-white rounded-lg shadow-md overflow-hidden card-hover';
-                        
+
                         floorCard.innerHTML = `
                             <div class="${floor.color} text-white px-4 py-3">
                                 <h3 class="font-bold text-base md:text-lg">${floor.name}</h3>
@@ -639,11 +581,11 @@
                                 </div>
                             </div>
                         `;
-                        
+
                         floorsContainer.appendChild(floorCard);
-                        
+
                         const sectionsList = document.getElementById(`sections-${floor.id}`);
-                        
+
                         floor.sections.forEach(section => {
                             const sectionItem = document.createElement('li');
                             sectionItem.innerHTML = `
@@ -652,9 +594,9 @@
                                     <i class="fas fa-chevron-right text-sm text-gray-500"></i>
                                 </button>
                             `;
-                            
+
                             sectionsList.appendChild(sectionItem);
-                            
+
                             sectionItem.querySelector('.section-btn').addEventListener('click', () => {
                                 showSectionDetails(section.id);
                             });
@@ -664,11 +606,11 @@
 
                 function renderSubOffices() {
                     subOfficesContainer.innerHTML = '';
-                    
+
                     data.structure.subOffices.forEach(office => {
                         const officeCard = document.createElement('div');
                         officeCard.className = 'bg-white rounded-lg shadow-md overflow-hidden card-hover';
-                        
+
                         officeCard.innerHTML = `
                             <div class="${office.color} text-white px-4 py-3">
                                 <h3 class="font-bold text-base md:text-lg">${office.name}</h3>
@@ -684,11 +626,11 @@
                                 </div>
                             </div>
                         `;
-                        
+
                         subOfficesContainer.appendChild(officeCard);
-                        
+
                         const sectionsList = document.getElementById(`sections-${office.id}`);
-                        
+
                         office.sections.forEach(section => {
                             const sectionItem = document.createElement('li');
                             sectionItem.innerHTML = `
@@ -697,9 +639,9 @@
                                     <i class="fas fa-chevron-right text-sm text-gray-500"></i>
                                 </button>
                             `;
-                            
+
                             sectionsList.appendChild(sectionItem);
-                            
+
                             sectionItem.querySelector('.section-btn').addEventListener('click', () => {
                                 showSectionDetails(section.id);
                             });
@@ -709,11 +651,11 @@
 
                 function renderOtherOffices() {
                     otherOfficesContainer.innerHTML = '';
-                    
+
                     data.structure.otherOffices.forEach(office => {
                         const officeCard = document.createElement('div');
                         officeCard.className = 'bg-white rounded-lg shadow-md overflow-hidden card-hover';
-                        
+
                         officeCard.innerHTML = `
                             <div class="${office.color} text-white px-4 py-3">
                                 <h3 class="font-bold text-base md:text-lg">${office.name}</h3>
@@ -729,11 +671,11 @@
                                 </div>
                             </div>
                         `;
-                        
+
                         otherOfficesContainer.appendChild(officeCard);
-                        
+
                         const sectionsList = document.getElementById(`sections-${office.id}`);
-                        
+
                         office.sections.forEach(section => {
                             const sectionItem = document.createElement('li');
                             sectionItem.innerHTML = `
@@ -742,9 +684,9 @@
                                     <i class="fas fa-chevron-right text-sm text-gray-500"></i>
                                 </button>
                             `;
-                            
+
                             sectionsList.appendChild(sectionItem);
-                            
+
                             sectionItem.querySelector('.section-btn').addEventListener('click', () => {
                                 showSectionDetails(section.id);
                             });
@@ -755,10 +697,10 @@
                 function showSectionDetails(sectionId) {
                     tabContents[currentTab].classList.add('hidden');
                     tabContents.details.classList.remove('hidden');
-                    
+
                     let sectionData = null;
                     let sectionName = '';
-                    
+
                     for (const floor of data.structure.floors) {
                         const section = floor.sections.find(s => s.id === sectionId);
                         if (section) {
@@ -767,7 +709,7 @@
                             break;
                         }
                     }
-                    
+
                     if (!sectionData) {
                         for (const office of data.structure.subOffices) {
                             const section = office.sections.find(s => s.id === sectionId);
@@ -778,7 +720,7 @@
                             }
                         }
                     }
-                    
+
                     if (!sectionData) {
                         for (const office of data.structure.otherOffices) {
                             const section = office.sections.find(s => s.id === sectionId);
@@ -789,26 +731,26 @@
                             }
                         }
                     }
-                    
+
                     if (!sectionData) return;
-                    
+
                     detailsTitle.textContent = sectionName;
                     currentSection = sectionId;
                     currentContacts = sectionData.contacts || [];
                     currentSearchTerm = '';
                     sectionSearch.value = '';
-                    
+
                     currentSort = { field: 'name', direction: 'asc' };
                     document.querySelectorAll('.sort-header').forEach(h => {
                         h.classList.remove('sort-asc', 'sort-desc');
                     });
-                    
+
                     renderSectionContacts();
                 }
 
                 function renderSectionContacts() {
                     if (!currentContacts) return;
-                    
+
                     let filteredContacts = currentContacts.filter(contact => {
                         const searchFields = [
                             contact.designation.toLowerCase(),
@@ -820,33 +762,33 @@
                             contact.email.toLowerCase(),
                             contact.details.toLowerCase()
                         ];
-                        
+
                         return searchFields.some(field => field.includes(currentSearchTerm));
                     });
-                    
+
                     filteredContacts.sort((a, b) => {
                         const fieldA = a[currentSort.field]?.toLowerCase() || '';
                         const fieldB = b[currentSort.field]?.toLowerCase() || '';
-                        
+
                         if (currentSort.direction === 'asc') {
                             return fieldA.localeCompare(fieldB);
                         } else {
                             return fieldB.localeCompare(fieldA);
                         }
                     });
-                    
+
                     contactsList.innerHTML = '';
-                    
+
                     filteredContacts.forEach(contact => {
                         const row = document.createElement('tr');
                         row.className = 'hover:bg-gray-50';
-                        
+
                         const highlightText = (text) => {
                             if (!currentSearchTerm) return text;
                             const regex = new RegExp(currentSearchTerm, 'gi');
                             return text.replace(regex, match => `<span class="search-highlight">${match}</span>`);
                         };
-                        
+
                         row.innerHTML = `
                             <td class="px-3 md:px-6 py-3 whitespace-nowrap">
                                 <div class="text-sm font-medium text-gray-900">${highlightText(contact.designation)}</div>
@@ -867,10 +809,10 @@
                                 </a>
                             </td>
                         `;
-                        
+
                         contactsList.appendChild(row);
                     });
-                    
+
                     document.querySelectorAll('.view-details').forEach(button => {
                         button.addEventListener('click', (e) => {
                             const contact = JSON.parse(button.dataset.contact);
@@ -883,14 +825,14 @@
                     let filteredContacts = contacts.filter(contact => {
                         let matchesFilter = true;
                         if (currentFilter !== 'all') {
-                            matchesFilter = contact.designation.toLowerCase().includes(currentFilter) || 
+                            matchesFilter = contact.designation.toLowerCase().includes(currentFilter) ||
                                            contact.name.toLowerCase().includes(currentFilter);
                         }
-                        
+
                         if (!matchesFilter) return false;
-                        
+
                         if (!currentSearchTerm) return true;
-                        
+
                         const searchFields = [
                             contact.designation.toLowerCase(),
                             contact.name.toLowerCase(),
@@ -901,21 +843,21 @@
                             contact.email.toLowerCase(),
                             contact.details.toLowerCase()
                         ];
-                        
+
                         return searchFields.some(field => field.includes(currentSearchTerm));
                     });
-                    
+
                     filteredContacts.sort((a, b) => {
                         const fieldA = a[currentSort.field]?.toLowerCase() || '';
                         const fieldB = b[currentSort.field]?.toLowerCase() || '';
-                        
+
                         if (currentSort.direction === 'asc') {
                             return fieldA.localeCompare(fieldB);
                         } else {
                             return fieldB.localeCompare(fieldA);
                         }
                     });
-                    
+
                     return filteredContacts;
                 }
 
@@ -923,30 +865,30 @@
                     const filteredContacts = filterAndSortContacts(allContacts);
                     const totalContacts = filteredContacts.length;
                     const totalPages = Math.ceil(totalContacts / contactsPerPage);
-                    
+
                     contactTotal.textContent = totalContacts;
                     contactStart.textContent = ((currentPage - 1) * contactsPerPage) + 1;
                     contactEnd.textContent = Math.min(currentPage * contactsPerPage, totalContacts);
-                    
+
                     prevPage.disabled = currentPage <= 1;
                     nextPage.disabled = currentPage >= totalPages;
-                    
+
                     const startIndex = (currentPage - 1) * contactsPerPage;
                     const endIndex = Math.min(startIndex + contactsPerPage, totalContacts);
                     const pageContacts = filteredContacts.slice(startIndex, endIndex);
-                    
+
                     allContactsList.innerHTML = '';
-                    
+
                     pageContacts.forEach(contact => {
                         const card = document.createElement('div');
                         card.className = 'bg-white rounded-lg shadow p-4 md:p-6 hover:shadow-md transition-shadow duration-200 contact-card';
-                        
+
                         const highlightText = (text) => {
                             if (!currentSearchTerm) return text;
                             const regex = new RegExp(currentSearchTerm, 'gi');
                             return text.replace(regex, match => `<span class="search-highlight">${match}</span>`);
                         };
-                        
+
                         card.innerHTML = `
                             <div class="flex items-start">
                                 <div class="flex-shrink-0 h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
@@ -981,10 +923,10 @@
                                 </div>
                             </div>
                         `;
-                        
+
                         allContactsList.appendChild(card);
                     });
-                    
+
                     document.querySelectorAll('.view-details').forEach(button => {
                         button.addEventListener('click', (e) => {
                             const contact = JSON.parse(button.dataset.contact);
@@ -1003,16 +945,16 @@
                     modalContact2.textContent = contact.contact2 || 'N/A';
                     modalEmail.textContent = contact.email;
                     modalDetails.textContent = contact.details || 'No additional details';
-                    
-                    callLandline.onclick = () => { 
-                        if (contact.landline) window.location.href = `tel:${contact.landline}`; 
+
+                    callLandline.onclick = () => {
+                        if (contact.landline) window.location.href = `tel:${contact.landline}`;
                     };
                     callPrimary.onclick = () => { window.location.href = `tel:${contact.contact1}`; };
-                    callSecondary.onclick = () => { 
-                        if (contact.contact2) window.location.href = `tel:${contact.contact2}`; 
+                    callSecondary.onclick = () => {
+                        if (contact.contact2) window.location.href = `tel:${contact.contact2}`;
                     };
                     emailContact.onclick = () => { window.location.href = `mailto:${contact.email}`; };
-                    
+
                     contactModal.classList.remove('hidden');
                 }
 
@@ -1021,18 +963,10 @@
                 renderSubOffices();
                 renderOtherOffices();
                 renderAllContacts();
-            } catch (error) {
-                console.error('Error fetching data:', error);
-                // Optionally, display an error message to the user
-                const errorMessage = document.createElement('div');
-                errorMessage.className = 'text-red-600 p-4 text-center';
-                errorMessage.textContent = 'Failed to load contact data. Please try again later.';
-                document.querySelector('main').prepend(errorMessage);
-            }
-        }
-
-        // Call fetchData to load the data
-        fetchData();
+            })
+            .catch(err => {
+                console.error('Failed to fetch contactsData.json:', err);
+            });
     </script>
 </body>
 </html>
