@@ -20,6 +20,22 @@
               "details": "Cyber crime investigations"
             }
           ]
+
+          "id": "cyber1-investigation",
+          "name": "Cyber Burue",
+          "contacts": [
+            {
+              "designation": "DIG",
+              "name": "Ram Tharu",
+              "callSign": "Papa-1",
+              "landline": "01-4223477",
+              "contact1": "9842345678",
+              "contact2": "9852345678",
+              "email": "niraj.basnet@kathmandupolice.gov.np",
+              "details": "Not Found"
+            }
+          ]
+          
         }
       ]
     },
